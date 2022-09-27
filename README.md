@@ -1,16 +1,38 @@
-# untitled2
-
-A new Flutter project.
+# Rate on Google Play by callin Android native
 
 ## Getting Started
+### class MainActivity: FlutterActivity() {
+      private val CHANNEL = "com.abc.app/rating"
 
-This project is a starting point for a Flutter application.
+      override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
+          super.configureFlutterEngine(flutterEngine)
+          MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler {
+                  call, result ->
+              if (call.method == "rateOnGooglePlay") {
+                  if (call.hasArgument("packageName")) {
+                      val packageName = call.argument<String>("packageName")
+                      if (packageName != null && packageName.isNotEmpty()) {
+                          val res = rateOnGooglePlay(packageName)
+                          result.success(res)
+                      } else {
+                          result.error("400", "Package name error", "Package name is empty")
+                      }
+                  }
+              } else {
+                  print("Something")
+              }
+          }
 
-A few resources to get you started if this is your first Flutter project:
+      }
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+      private fun rateOnGooglePlay(packageName: String) : Boolean {
+          return try {
+              startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")))
+              true
+          } catch (e: ActivityNotFoundException) {
+              startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")))
+              false
+          }
+      }
+  ### }
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
